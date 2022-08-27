@@ -18,15 +18,21 @@ urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 def http_request_get(
-    url, session=None, payload=None, parse=True, user_agent=generate_user_agent()
+    url, session=None, payload=None, parse=True, user_agent=generate_user_agent(), proxies: dict = None
 ):
     """ Sends a GET HTTP request to a website and returns its HTML content and full url address. """
 
     if payload is None:
         payload = {}
 
+    if proxies is not None and len(proxies) > 0:
+        assert isinstance(proxies, dict), f"wrong proxy format"
+    else:
+        proxies= None
+
     try:
         if session:
+            session.proxies= proxies
             content = session.get(
                 url,
                 params=payload,
@@ -39,6 +45,7 @@ def http_request_get(
                 params=payload,
                 verify=False,
                 headers={"User-Agent": user_agent},
+                proxies= proxies
             )
 
         content.raise_for_status()  # Raise HTTPError for bad requests (4xx or 5xx)

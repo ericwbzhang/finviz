@@ -11,16 +11,17 @@ CRYPTO_URL = "https://finviz.com/crypto_performance.ashx"
 STOCK_PAGE = {}
 
 
-def get_page(ticker):
+def get_page(ticker, proxies= None):
     global STOCK_PAGE
 
     if ticker not in STOCK_PAGE:
         STOCK_PAGE[ticker], _ = http_request_get(
-            url=STOCK_URL, payload={"t": ticker}, parse=True
+            url=STOCK_URL, payload={"t": ticker}, parse=True, proxies= proxies
         )
 
-
-def get_stock(ticker):
+#TODO
+# WZ NOTE: add proxy
+def get_stock(ticker, proxies= None ):
     """
     Returns a dictionary containing stock data.
 
@@ -29,7 +30,7 @@ def get_stock(ticker):
     :return dict
     """
 
-    get_page(ticker)
+    get_page(ticker, proxies= proxies)
     page_parsed = STOCK_PAGE[ticker]
 
     title = page_parsed.cssselect('table[class="fullview-title"]')[0]
@@ -61,7 +62,7 @@ def get_stock(ticker):
     return data
 
 
-def get_insider(ticker):
+def get_insider(ticker, proxies= None ):
     """
     Returns a list of dictionaries containing all recent insider transactions.
 
@@ -69,7 +70,7 @@ def get_insider(ticker):
     :return: list
     """
 
-    get_page(ticker)
+    get_page(ticker, proxies)
     page_parsed = STOCK_PAGE[ticker]
     outer_table = page_parsed.cssselect('table[class="body-table"]')
 
@@ -87,7 +88,7 @@ def get_insider(ticker):
     return data
 
 
-def get_news(ticker):
+def get_news(ticker, proxies= None):
     """
     Returns a list of sets containing news headline and url
 
@@ -95,7 +96,7 @@ def get_news(ticker):
     :return: list
     """
 
-    get_page(ticker)
+    get_page(ticker, proxies)
     page_parsed = STOCK_PAGE[ticker]
     news_table = page_parsed.cssselect('table[id="news-table"]')
 
@@ -126,13 +127,13 @@ def get_news(ticker):
     return results
 
 
-def get_all_news():
+def get_all_news( proxies= None ):
     """
     Returns a list of sets containing time, headline and url
     :return: list
     """
 
-    page_parsed, _ = http_request_get(url=NEWS_URL, parse=True)
+    page_parsed, _ = http_request_get(url=NEWS_URL, parse=True, proxies= proxies)
     all_dates = [
         row.text_content() for row in page_parsed.cssselect('td[class="nn-date"]')
     ]
@@ -146,22 +147,22 @@ def get_all_news():
     return list(zip(all_dates, all_headlines, all_links))
 
 
-def get_crypto(pair):
+def get_crypto(pair, proxies= None ):
     """
 
     :param pair: crypto pair
     :return: dictionary
     """
 
-    page_parsed, _ = http_request_get(url=CRYPTO_URL, parse=True)
-    page_html, _ = http_request_get(url=CRYPTO_URL, parse=False)
+    page_parsed, _ = http_request_get(url=CRYPTO_URL, parse=True, proxies= proxies)
+    page_html, _ = http_request_get(url=CRYPTO_URL, parse=False, proxies= proxies)
     crypto_headers = page_parsed.cssselect('tr[valign="middle"]')[0].xpath("td//text()")
     crypto_table_data = get_table(page_html, crypto_headers)
 
     return crypto_table_data[pair]
 
 
-def get_analyst_price_targets(ticker, last_ratings=5):
+def get_analyst_price_targets(ticker, last_ratings=5, proxies= None ):
     """
     Returns a list of dictionaries containing all analyst ratings and Price targets
      - if any of 'price_from' or 'price_to' are not available in the DATA, then those values are set to default 0
@@ -173,7 +174,7 @@ def get_analyst_price_targets(ticker, last_ratings=5):
     analyst_price_targets = []
 
     try:
-        get_page(ticker)
+        get_page(ticker, proxies= proxies)
         page_parsed = STOCK_PAGE[ticker]
         table = page_parsed.cssselect('table[class="fullview-ratings-outer"]')[0]
 
